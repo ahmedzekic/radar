@@ -1,4 +1,4 @@
-from point_3d import Point
+from point_2d import Point
 from math import acos
 from math import degrees
 

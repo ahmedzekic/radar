@@ -30,7 +30,7 @@ poly = Polygon(polygon)
 
 def generate_flight(polygon, lower_bound, upper_bound, max_bound):
     flight_type = random.randint(1, 3)
-    v = random.randint(1, 50)
+    v = random.randint(5, 50)
     if flight_type == 1:  # eksterni
         s_p_xy = polygon.rand_point_on_edge()
         e_p_xy = polygon.rand_point_on_edge()
@@ -43,32 +43,88 @@ def generate_flight(polygon, lower_bound, upper_bound, max_bound):
         end_point = Point3d.p_2d_to_3d(e_p_xy, e_p_z)
         return Flight(start_point, end_point, v, [start_point, end_point], flight_type)
     if flight_type == 2:  # interni
+        checkpoints = []
         s_p_xy = polygon.rand_point_in_poly()
         e_p_xy = polygon.rand_point_in_poly()
         while s_p_xy == e_p_xy:
             s_p_xy = polygon.rand_point_in_poly()
             e_p_xy = polygon.rand_point_in_poly()
+        mid_z = random.randint(lower_bound + 1, upper_bound)
         start_point = Point3d.p_2d_to_3d(s_p_xy, lower_bound)
         end_point = Point3d.p_2d_to_3d(e_p_xy, lower_bound)
-        return Flight(start_point, end_point, v, [start_point, end_point], flight_type)
+        checkpoints.append(start_point)
+        distance_sp_to_ep = start_point.euclidean_distance(end_point)
+        if distance_sp_to_ep < 200:
+            mid_x = (start_point.x + end_point.x) // 2
+            mid_y = (start_point.y + end_point.y) // 2
+            checkpoints.append(Point3d(mid_x, mid_y, mid_z))
+            checkpoints.append(end_point)
+            return Flight(start_point, end_point, v, checkpoints, flight_type)
+        else:
+            temp = distance_sp_to_ep / 100
+            x_dif = abs(start_point.x - end_point.x) / temp
+            y_dif = abs(start_point.y - end_point.y) / temp
+            if start_point.x < end_point.x:
+                mid1_x = start_point.x + x_dif
+                mid2_x = end_point.x - x_dif
+            else:
+                mid1_x = start_point.x - x_dif
+                mid2_x = end_point.x + x_dif
+            if start_point.y < end_point.y:
+                mid1_y = start_point.y + y_dif
+                mid2_y = end_point.y - y_dif
+            else:
+                mid1_y = start_point.y - y_dif
+                mid2_y = end_point.y + y_dif
+            checkpoints.append(Point3d(mid1_x, mid1_y, mid_z))
+            checkpoints.append(Point3d(mid2_x, mid2_y, mid_z))
+            checkpoints.append(end_point)
+        return Flight(start_point, end_point, v, checkpoints, flight_type)
     if flight_type == 3:  # poluinterni
         s_p_xy = polygon.rand_point_in_poly()
         e_p_xy = polygon.rand_point_on_edge()
         while s_p_xy == e_p_xy:
             s_p_xy = polygon.rand_point_in_poly()
             e_p_xy = polygon.rand_point_on_edge()
-        e_p_z = random.randrange(upper_bound, max_bound)
+        e_p_z = random.randrange(lower_bound, upper_bound)
         start_point = Point3d.p_2d_to_3d(s_p_xy, lower_bound)
         end_point = Point3d.p_2d_to_3d(e_p_xy, e_p_z)
         temp = random.randint(0, 1)
         if temp:
-            return Flight(start_point, end_point, v, [start_point, end_point], flight_type)
-        else:
-            return Flight(end_point, start_point, v, [start_point, end_point], flight_type)
+            start_point, end_point = end_point, start_point
+        checkpoints = [start_point]
+        distance_sp_to_ep = s_p_xy.euclidean_distance(e_p_xy)
+        if distance_sp_to_ep > 100:
+            temp = distance_sp_to_ep / 100
+            x_dif = abs(start_point.x - end_point.x) / temp
+            y_dif = abs(start_point.y - end_point.y) / temp
+            if start_point.x < end_point.x:
+                if start_point.z < end_point.z:
+                    mid1_x = start_point.x + x_dif
+                else:
+                    mid1_x = end_point.x - x_dif
+            else:
+                if start_point.z < end_point.z:
+                    mid1_x = start_point.x - x_dif
+                else:
+                    mid1_x = end_point.x + x_dif
+            if start_point.y < end_point.y:
+                if start_point.z < end_point.z:
+                    mid1_y = start_point.y + y_dif
+                else:
+                    mid1_y = end_point.y - y_dif
+            else:
+                if start_point.z < end_point.z:
+                    mid1_y = start_point.y - y_dif
+                else:
+                    mid1_y = end_point.y + y_dif
+            checkpoints.append(Point3d(mid1_x, mid1_y, max(start_point.z, end_point.z)))
+        checkpoints.append(end_point)
+        return Flight(start_point, end_point, v, checkpoints, flight_type)
 
 
 flights = []
-for i in range(0, 50):
+for i in range(0, 100):
     """while True:
         s_p_x = random.randrange(0, width)
         s_p_y = random.randrange(0, height)
@@ -96,7 +152,7 @@ for i in range(0, 50):
     print(rand_s_p)
     print(rand_e_p)
     print("\n")"""
-    flights.append(generate_flight(poly, 50, 270, 500))
+    flights.append(generate_flight(poly, 50, 100, 500))
 # flights.append(Flight(Point3d(30, 400, 1), Point3d(30, 100, 1), 1))
 
 """for i in polygon:
@@ -109,11 +165,23 @@ while run:
         if event.type == pygame.QUIT:
             run = False
     init_poly(window, poly.tuple_vertices())
+    for i in range(0, len(flights)):
+        for j in range(i + 1, len(flights)):
+            flights[i].intersect(flights[j], 50)
     for f in flights:
         if f.ended_flight:
+            print(f.segments)
             flights.remove(f)
-        pygame.draw.circle(window, (0, 0, 0), (int(f.current_position.x), int(f.current_position.y)), 2)
-        pygame.draw.circle(window, (0, 0, 0), (int(f.current_position.x), int(f.current_position.y)), 25, 1)
+        pygame.draw.circle(window, (0, 0, 0), (int(f.current_position.x), int(f.current_position.y)), 3)
+        if f.intersects:
+            color = pygame.Color('red')
+        elif f.flight_type == 1:
+            color = pygame.Color('black')
+        elif f.flight_type == 2:
+            color = pygame.Color('yellow')
+        else:
+            color = pygame.Color('green')
+        pygame.draw.circle(window, color, (round(f.current_position.x), round(f.current_position.y)), 25, 3)
         f.calculate_current_position()
         # print((a.current_position.z))
     pygame.display.update()
