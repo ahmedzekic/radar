@@ -76,9 +76,10 @@ class Flight:
                 self.current_position.y = self.segments[self.i].y + param * self.yparam
                 self.current_position.z = self.segments[self.i].z + param * self.zparam
 
-    def intersect(self, other, proximity):
+    def intersect(self, other, polygon, proximity):
         if not (self.flight_type == 1 or other.flight_type == 1) and \
-                self.current_position.euclidean_distance(other.current_position) < proximity:
-            self.intersects = True
-            other.intersects = True
+                self.current_position.euclidean_distance(other.current_position) <= proximity:
+            if self.current_position.point_2d().is_in_poly(polygon) and other.current_position.point_2d().is_in_poly(polygon):
+                self.intersects = True
+                other.intersects = True
 

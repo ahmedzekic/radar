@@ -10,17 +10,17 @@ class Point:
         return repr(self)
         
     def __repr__(self):
-        return "({0},{1})".format(self.x,self.y)
+        return "({0},{1})".format(self.x, self.y)
         
     def __add__(self, other):
         x = self.x + other.x
         y = self.y + other.y
-        return Point(x,y)
+        return Point(x, y)
         
     def __sub__(self, other):
         x = self.x - other.x
         y = self.y - other.y
-        return Point(x,y)
+        return Point(x, y)
         
     def __lt__(self, other):
         return (self.x < other.x) or (self.x == other.x and self.y < other.y)
@@ -37,7 +37,7 @@ class Point:
         return not self.__eq__(other)
     
     def __key(self): #za hesiranje
-        return (self.x, self.y)
+        return self.x, self.y
 
     def __hash__(self): #sad je hashable
         return hash(self.__key())

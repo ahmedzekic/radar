@@ -1,4 +1,5 @@
 from math import sqrt
+from point_2d import Point
 
 
 class Point3d:
@@ -52,6 +53,9 @@ class Point3d:
 
     def tuple(self):
         return self.x, self.y, self.z
+
+    def point_2d(self):
+        return Point(self.x, self.y)
 
     @staticmethod
     def p_2d_to_3d(point, z):

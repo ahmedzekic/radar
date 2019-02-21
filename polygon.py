@@ -1,6 +1,6 @@
 import random
-
 from point_2d import Point
+
 
 class Polygon:
     def __init__(self, list_of_points):
