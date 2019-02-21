@@ -124,7 +124,7 @@ def generate_flight(polygon, lower_bound, upper_bound, max_bound):
 
 
 flights = []
-for i in range(0, 100):
+for i in range(0, 20):
     """while True:
         s_p_x = random.randrange(0, width)
         s_p_y = random.randrange(0, height)
@@ -152,12 +152,13 @@ for i in range(0, 100):
     print(rand_s_p)
     print(rand_e_p)
     print("\n")"""
-    flights.append(generate_flight(poly, 50, 100, 500))
+    flights.append(generate_flight(poly, 50, 270, 500))
 # flights.append(Flight(Point3d(30, 400, 1), Point3d(30, 100, 1), 1))
 
 """for i in polygon:
     tuple_polygon.append(i.tuple())"""
 
+font = pygame.font.SysFont("monospace", 15)
 run = True
 while run:
     pygame.time.delay(10)
@@ -167,12 +168,14 @@ while run:
     init_poly(window, poly.tuple_vertices())
     for i in range(0, len(flights)):
         for j in range(i + 1, len(flights)):
-            flights[i].intersect(flights[j], 50)
-    for f in flights:
+            flights[i].intersect(flights[j], poly.vertices, 50)
+    for index, f in enumerate(flights):
         if f.ended_flight:
-            print(f.segments)
-            flights.remove(f)
-        pygame.draw.circle(window, (0, 0, 0), (int(f.current_position.x), int(f.current_position.y)), 3)
+            flights.pop(index)
+        pygame.draw.circle(window, (0, 0, 0), (round(f.current_position.x), round(f.current_position.y)), 3)
+        color = pygame.Color('black')
+        text1 = font.render(str(round(f.current_position.z)), 1, color)
+        window.blit(text1, (round(f.current_position.x) - 10, round(f.current_position.y)))
         if f.intersects:
             color = pygame.Color('red')
         elif f.flight_type == 1:
