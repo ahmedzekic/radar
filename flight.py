@@ -14,11 +14,6 @@ class Flight:
         self.ended_flight = False
         self.intersects = False
         self.x_intersections = set()
-        self.y_intersections = set()
-        self.z_intersections = set()
-        self.x_intersections_list = []
-        # self.k = (self.segments[self.i + 1].y - self.segments[self.i].y) / (self.segments[self.i + 1].x - self.segments[self.i].x)
-        # self.n = self.segments[self.i].y - self.k * self.segments[self.i].x
         self.xparam = self.segments[self.i + 1].x - self.segments[self.i].x
         self.yparam = self.segments[self.i + 1].y - self.segments[self.i].y
         self.zparam = self.segments[self.i + 1].z - self.segments[self.i].z
@@ -62,6 +57,7 @@ class Flight:
 
     def calculate_current_position(self):
         self.intersects = False
+        self.x_intersections = set()
         if self.i != len(self.segments) - 1:
             self.change_i()
         self.ended_flight = self.has_ended_flight()
@@ -73,7 +69,7 @@ class Flight:
                 self.current_position.x -= x_difference
             else:
                 self.current_position.x += x_difference
-            if self.xparam == 0:
+            if self.xparam == 0 and self.yparam !=0:
                 y_difference = abs(abs(self.segments[self.i + 1].y) - abs(self.segments[self.i].y)) / time_s_to_e
                 if self.segments[self.i + 1].y < self.segments[self.i].y:
                     self.current_position.y -= y_difference
@@ -94,33 +90,6 @@ class Flight:
                 other.intersects = True
 
 
-    @staticmethod
-    def find_interval_y(array, value, difference):
-        min = -1
-        for i in range(0, len(array)):
-            if array[i].current_position.y >= value - difference:
-                min = i
-                break
-        max = -1
-        for i in range(len(array) - 1, -1, -1):
-            if array[i].current_position.y <= value + difference:
-                max = i
-                break
-        return min, max
-
-    @staticmethod
-    def find_interval_z(array, value, difference):
-        min = -1
-        for i in range(0, len(array)):
-            if array[i].current_position.z >= value - difference:
-                min = i
-                break
-        max = -1
-        for i in range(len(array) - 1, -1, -1):
-            if array[i].current_position.z <= value + difference:
-                max = i
-                break
-        return min, max
     @staticmethod
     def binary_y1(low, high, array, target):
         while low != high:
@@ -152,6 +121,7 @@ class Flight:
             else:
                 high = mid
         return low
+
     @staticmethod
     def binary_z2(low, high, array, target):
         while low != high:
@@ -165,15 +135,6 @@ class Flight:
         return low
 
     def find_intersections(self, polygon, proximity):
-        set_intersections = self.x_intersections & self.y_intersections & self.z_intersections
-        for f in set_intersections:
-            if not f.ended_flight:
-                self.intersect(f, polygon, proximity)
-        """self.x_intersections.clear()
-        self.y_intersections.clear()
-        self.z_intersections.clear()"""
-
-    def find_intersections2(self, polygon, proximity):
         x_intersections_list = sorted(self.x_intersections,
                        key=lambda f: (f.current_position.y, f.current_position.x, f.current_position.z))
         if len(x_intersections_list) != 0:
@@ -189,9 +150,7 @@ class Flight:
                 if b != 0:
                     if not (a == 0 and y_intersections_list[a].current_position.z >= self.current_position.z - 50):
                         a = a + 1
-                    #z_intersections_list = y_intersections_list[a:b]
-                    #print(z_intersections_list)
-                    for i in range(a,b):
+                    for i in range(a, b):
                         if not y_intersections_list[i].ended_flight:
                             self.intersect(y_intersections_list[i], polygon, proximity)
 

@@ -63,6 +63,3 @@ class Polygon:
             x = random.randint(self.min_x(), self.max_x())
             y = random.randint(self.min_y(), self.max_y())
         return Point(x, y)
-
-
-    # rand tacka na ivici
